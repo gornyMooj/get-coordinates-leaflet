@@ -1,1 +1,142 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lat & Long Viewer</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+<style>
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    background-color: #90cccb;
+}
+body {
+      padding: 0;
+      margin: 0;
+}
+
+.leaflet-tooltip-pane .text {
+  color: rgb(186, 27, 200); 
+  font-weight: bold;
+  background: transparent;
+  border:0;
+  box-shadow: none;
+  font-size:1em;
+}
+
+#remove-markers { 
+    z-index:900;
+    position: absolute;
+    top: 200px;
+    left: 20px;
+}
+
+#menu{
+    width:100%;
+    height: 200px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 900;
+    background-color: rgb(255, 255, 255, 0.1);
+
+    /* -webkit-box-shadow: inset 0px 0px 0px 10px rgb(255, 255, 255, 0.4);
+    -moz-box-shadow:inset 0px 0px 0px 10px rgb(255, 255, 255, 0.4);
+    box-shadow:inset 0px 0px 0px 10px rgb(255, 255, 255, 0.4); */
+}
+
+#menu-content {
+    width:100%;
+    height: 100%; 
+}
+
+    
+
+</style>
+<body>
+
+<div id="map"></div>
+<button id="remove-markers">Remove Markers</button>
+
+<div id="menu">
+    <div id="menu-content"></div>
+</div>
+
+<script>
+    var markerCounter = 0;
+    var markers = new L.FeatureGroup();
+    var texts = new L.FeatureGroup();
+    var buttonRemoveMarkers = document.getElementById("remove-markers");
+
+    var map = L.map('map').setView([53.3498, -6.2603], 10);
+    var OpenStreetMap_HOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+    });
+
+    OpenStreetMap_HOT.addTo(map);
+
+    markers.addTo(map);
+    texts.addTo(map);
+
+    function onMapClick(e) {
+       console.log(e.latlng.lat,e.latlng.lng);
+
+       markerCounter += 1;
+
+       marker = L.circleMarker([e.latlng.lat,e.latlng.lng],{
+            fillColor: '#3388ff',
+            title: 'test'
+       });
+
+       console.log(marker.getLatLng());
+
+       markers.addLayer(marker);
+
+       var text = L.tooltip({
+            permanent: true,
+            direction: 'center',
+            className: 'text'
+        })
+        .setContent('' + markerCounter)
+        .setLatLng(marker.getLatLng());
+
+        text.addTo(texts);
+    };
+
+
+
+
+
+
+    // assigning events 
+    map.on('click', onMapClick);
+    buttonRemoveMarkers.addEventListener('click', removeMarkers);
+
+    function removeMarkers() {
+        // removee markers
+        markers.eachLayer(function (layer) {
+            markers.removeLayer(layer);
+        });
+        // removes labels
+        texts.eachLayer(function (layer) {
+           texts.removeLayer(layer);
+        });
+
+        markerCounter = 0;
+    };
+
+
+</script>
+</body>
+</html>
+
