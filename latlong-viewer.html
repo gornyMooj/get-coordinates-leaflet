@@ -175,7 +175,6 @@ body {
     background-color: transparent;
     padding: 0px 6px 0px 6px;
     font-size: 1.6em;
-
 }
 
 #div2-wraper {
@@ -188,9 +187,9 @@ body {
     background-color: rgb(200, 255, 0);
 }
 
-#remove-markers, #export-markers {
+#remove-markers, #export-markers, #export-geojson {
     cursor: pointer; 
-    text-align: center;
+    text-align: left;
     background-color: transparent;
     border-bottom: 1px solid rgba(72, 55, 89,0.3);
     /* text-shadow: 0 0 3px white; */
@@ -204,6 +203,10 @@ body {
 }
 
 #export-markers:hover {
+    color: #90cccb;
+}
+
+#export-geojson:hover {
     color: #90cccb;
 }
 
@@ -238,9 +241,6 @@ body {
 
 }
 
-
-
-
 </style>
 <body>
 
@@ -251,8 +251,9 @@ body {
     <div id="menu">
         <div id="menu-content">
             <div class="float-items" id="div1">
-                <div id="remove-markers">Remove Markers </div>
-                <div id="export-markers">SAVE </div>
+                <div id="remove-markers">Remove Markers</div>
+                <div id="export-markers">Download CSV</div>
+                <div id="export-geojson">Download GeoJSON</div>
             </div>
             <div class="float-items" id="div2-wraper">
                 <div id="div2">
@@ -273,6 +274,7 @@ body {
 <script>
     var buttonRemoveMarkers = document.getElementById("remove-markers");
     var buttomExportMarkers = document.getElementById("export-markers");
+    var buttomExportGeoJason = document.getElementById("export-geojson");
     var menuDiv = document.getElementById('menu-wraper');
     var closeMenu = document.getElementById('close-menu');
     var openMenu = document.getElementById('open-menu');
@@ -286,25 +288,26 @@ body {
 	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     });
 
+    var jsonForCSV = [];
+
+    var geoJSON = {
+        "type": "FeatureCollection",
+        "features": []
+    };
+
     OpenStreetMap_HOT.addTo(map);
 
     markers.addTo(map);
     texts.addTo(map);
 
     function onMapClick(e) {
-       console.log(e.latlng.lat,e.latlng.lng);
-
        markerCounter += 1;
 
        marker = L.circleMarker([e.latlng.lat,e.latlng.lng],{
             color: 'rgba(72, 55, 89,0.8)',
             fillColor: 'white',
             fillOpacity: 0.80
-
-         
        });
-
-       console.log(marker.getLatLng());
 
        markers.addLayer(marker);
 
@@ -325,21 +328,36 @@ body {
             menuDiv.style.display = "block";
             openMenu.style.display = "none";
         };
-    };
+        
+        jsonForCSV.push({
+            Latitude: e.latlng.lat,
+            Longitude: e.latlng.lng
+        });
 
+        geoJSON.features.push({
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    e.latlng.lng,
+                    e.latlng.lat
+                ]
+            }
+        });
+
+    };
 
     function addPointToContentList(lat,long) {
 
         var newDiv = document.createElement("div");
-
         var newLiPoint = document.createElement("li");
-        newLiPoint.innerHTML = '<b>' +markerCounter + " - Point </b>";
+        newLiPoint.innerHTML = '<b>' + markerCounter + " - Point </b>";
 
         var input = document.createElement("input");
-        input.setAttribute('type', 'text', 'name');
+        input.setAttribute('type', 'text', 'name', 'value');
         input.name = 'Desc'+ markerCounter;
-
-
+        input.value = 'Point ' + markerCounter;
 
         var newLiLat = document.createElement("li");
         newLiLat.innerHTML = "Latitude: " + lat;
@@ -356,28 +374,18 @@ body {
         newDiv.appendChild(breakLine);
 
         menuList.appendChild(newDiv);
-
-
-
     }
-
 
     // hide menu
     menuDiv.style.display = "none";
-
     // assigning events 
     map.on('click', onMapClick);
-
     buttonRemoveMarkers.addEventListener('click', removeMarkers);
-
-    // var buttomExportMarkers = document.getElementById("export-markers");
     buttomExportMarkers.addEventListener('click', saveMarkersToCSV);
-
-
+    // var buttomExportGeoJason = document.getElementById("export-geojson");
+    buttomExportGeoJason.addEventListener('click', saveMarkersToGeoJson)
     closeMenu.addEventListener('click', closeMenuPanel);
-
     openMenu.addEventListener('click', openMenuPanel);
-
 
     function removeMarkers() {
         // removee markers
@@ -389,27 +397,34 @@ body {
            texts.removeLayer(layer);
         });
         markerCounter = 0;
-
         // removes text from content list
         menuList.innerHTML = '';
     };
 
     function saveMarkersToCSV() {
 
-        //https://stackoverflow.com/questions/588263/how-can-i-get-all-a-forms-values-that-would-be-submitted-without-submitting
-        
         var formElement = document.forms.formMarkers;
-        var formData = new FormData(formElement);
-        console.log(formData.get('Desc1'));
 
-        var kvpairs = [];
         for ( var i = 0; i < formElement.elements.length; i++ ) {
             var e = formElement.elements[i];
-            kvpairs.push([encodeURIComponent(e.name), encodeURIComponent(e.value)]);
-        }
-        console.log(kvpairs);
+            jsonForCSV[i].Point = e.value;
+        };
 
-    }
+        const csvData = objectToCsv(jsonForCSV);
+        downloadCSV(csvData);
+    };
+
+    function saveMarkersToGeoJson() {
+        var formElement = document.forms.formMarkers;
+        var lista = [];
+        for ( var i = 0; i < formElement.elements.length; i++ ) {
+            var e = formElement.elements[i];
+            geoJSON.features[i].properties.name = e.value;
+        };
+        
+        downloadGeoJSON(geoJSON);
+
+    };
 
     function closeMenuPanel() {
         menuDiv.style.display = "none";
@@ -422,7 +437,47 @@ body {
         
     };
 
+    function objectToCsv (data) {
 
+        var csvRows = [];
+        var headers = Object.keys(data[0]);
+        csvRows.push(headers.join(','));
+        for(const row of data) {
+            const values = headers.map(header => {
+                const escaped = ('' + row[header]).replace(/"/g, '\\"');
+                return '"' + escaped + '"';
+            });  
+            csvRows.push(values.join(','));
+        };
+
+        return csvRows.join('\n');
+    };
+
+    function downloadCSV (data) {
+        var blob = new Blob([data], {type: 'text/csv'});
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'downloaded.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    function downloadGeoJSON(data) {
+        var objectToString = JSON.stringify(data);
+        var blob = new Blob([objectToString], {type: 'text/plain'});
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'downloaded.txt');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+ 
 </script>
 </body>
 </html>
