@@ -76,7 +76,7 @@ body {
 
 
 .leaflet-tooltip-pane .text {
-  color: rgb(186, 27, 200); 
+  color: rgba(72, 55, 89,1); 
   font-weight: bold;
   background: transparent;
   border:0;
@@ -84,39 +84,53 @@ body {
   font-size:1em;
 }
 
+#menu-wraper {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 900;
+    width:100%;
+    height:30%;
+    border-top: 1px solid rgba(72, 55, 89,0.3);
+}
 
 
 #menu{
-    width:100%;
-    height: 260px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    z-index: 900;
     background-color: rgba(255, 255, 255,0.3);
     padding: 32px;
     box-sizing:border-box;
+    width:60%;
+    height:100%;
+    float: right;
 }
 
 #close-menu {
     position: absolute;
     z-index: 900;
     right: 10px;
-    bottom: 230px;
+    bottom: 86%;
     color: red;
     font-weight: 900;
     font-size: 1.2em;
     cursor: pointer;
     font-family: 'Montserrat', sans-serif;
+    text-shadow: -2px -2px 0 white,
+               2px -2px 0 white,
+               -2px 2px 0 white,
+               2px 2px 0 white,
+               -3px 0 0 white,
+               3px 0 0 white,
+               0 -3px 0 white,
+               0 3px 0 white;
     
 }
 
 #open-menu-wraper {
-    border: 1px solid rgba(72, 55, 89,0.3);
+    border: 1px solid #4837594d;
     position: absolute;
     z-index: 900;
     right: 0px;
-    bottom: 224px;
+    bottom: 25%;
 }
 
 #open-menu {
@@ -135,42 +149,85 @@ body {
     height: 100%;
     width:100%;
     overflow: auto;
+    color: #483759; 
+    text-shadow: -2px -2px 0 white,
+               2px -2px 0 white,
+               -2px 2px 0 white,
+               2px 2px 0 white,
+               -3px 0 0 white,
+               3px 0 0 white,
+               0 -3px 0 white,
+               0 3px 0 white;
+    
     
 }
 
 .float-items {
-    height: 100%;
+
     float:left;
 }
 
+#div2 li {
+    list-style-type: none;
+}
+
 #div1 {
-    background-color: aqua;
+    background-color: transparent;
+    padding: 0px 6px 0px 6px;
+    font-size: 1.6em;
+
+}
+
+#div2-wraper {
+    font-size: 1em;
 }
 #div2 {
-    background-color: rgb(0, 255, 106);
+    padding: 6px 10px 0px 20px;
 }
 #div3 {
     background-color: rgb(200, 255, 0);
 }
 
-#remove-markers {
+#remove-markers, #export-markers {
     cursor: pointer; 
     text-align: center;
-    background-color: white;
-    padding: 0px 3px 1px 3px;
-    
+    background-color: transparent;
+    border-bottom: 1px solid rgba(72, 55, 89,0.3);
+    /* text-shadow: 0 0 3px white; */
+    font-weight: 900;
+    padding: 6px 0px 6px 0px;
+    font-weight: 900;  
 }
 
 @media (max-width:700px){
-    body{
+    body, #menu-content, #div2 {
         font-size: 0.7em;
     }
-    #remove-markers {
+    #div1 {
+    background-color: transparent;
+    padding: 0px 6px 0px 6px;
+}
+    #remove-markers, #export-markers {
         padding: 3px;
     }
     #close-menu {
         font-size: 1.6em;
     }
+    #menu-wraper {
+        height:40%;
+    }
+    #open-menu-wraper {
+        bottom: 35%;
+    }
+    #menu{
+        width:100%;
+        height:100%;
+        float: none;
+    }
+    #div2-wraper {
+        font-size: 1.9em;
+    }   
+
 }
 
 
@@ -182,16 +239,23 @@ body {
 <div id="map"></div>
 <!-- <button id="remove-markers">Remove Markers</button> -->
 <div id="top-bar"></div>
-<div id="menu">
-    <div id="menu-content">
-        <div class="float-items" id="div1">
-            <div id="remove-markers">Remove Markers </div>
+<div id="menu-wraper">
+    <div id="menu">
+        <div id="menu-content">
+            <div class="float-items" id="div1">
+                <div id="remove-markers">Remove Markers </div>
+                <div id="export-markers">SAVE </div>
+            </div>
+            <div class="float-items" id="div2-wraper">
+                <div id="div2">
+                    <form id="formMarkers"></form>
+                </div>
+            </div>
+            <div class="float-items" id="div3"></div>
         </div>
-        <div class="float-items" id="div2"></div>
-        <div class="float-items" id="div3"></div>
-    </div>
 
-    <div id="close-menu">X</div>
+        <div id="close-menu">X</div>
+    </div>
 </div>
 <div id="open-menu-wraper">
     <div id="open-menu" title="Open menu">&#9668;</div>
@@ -200,9 +264,11 @@ body {
 
 <script>
     var buttonRemoveMarkers = document.getElementById("remove-markers");
-    var menuDiv = document.getElementById('menu');
+    var buttomExportMarkers = document.getElementById("export-markers");
+    var menuDiv = document.getElementById('menu-wraper');
     var closeMenu = document.getElementById('close-menu');
     var openMenu = document.getElementById('open-menu');
+    var menuList = document.getElementById('formMarkers');
 
     var markerCounter = 0;
     var markers = new L.FeatureGroup();
@@ -223,8 +289,11 @@ body {
        markerCounter += 1;
 
        marker = L.circleMarker([e.latlng.lat,e.latlng.lng],{
-            fillColor: '#3388ff',
-            title: 'test'
+            color: 'rgba(72, 55, 89,0.8)',
+            fillColor: 'white',
+            fillOpacity: 0.80
+
+         
        });
 
        console.log(marker.getLatLng());
@@ -240,13 +309,49 @@ body {
         .setLatLng(marker.getLatLng());
 
         text.addTo(texts);
-
+        
+        // add text to menu
+         addPointToContentList(e.latlng.lat,e.latlng.lng);
         // show menu
         if(menuDiv.style.display === "none") {
             menuDiv.style.display = "block";
             openMenu.style.display = "none";
         };
     };
+
+
+    function addPointToContentList(lat,long) {
+
+        var newDiv = document.createElement("div");
+
+        var newLiPoint = document.createElement("li");
+        newLiPoint.innerHTML = '<b>' +markerCounter + " - Point </b>";
+
+        var input = document.createElement("input");
+        input.setAttribute('type', 'text', 'name');
+        input.name = 'Desc'+ markerCounter;
+
+
+
+        var newLiLat = document.createElement("li");
+        newLiLat.innerHTML = "Latitude: " + lat;
+
+        var newLiLong = document.createElement("li");
+        newLiLong.innerHTML = 'Longitude: ' + long; 
+
+        var breakLine = document.createElement("br");
+        
+        newDiv.appendChild(newLiPoint);
+        newDiv.appendChild(input);
+        newDiv.appendChild(newLiLat);
+        newDiv.appendChild(newLiLong);
+        newDiv.appendChild(breakLine);
+
+        menuList.appendChild(newDiv);
+
+
+
+    }
 
 
     // hide menu
@@ -256,6 +361,10 @@ body {
     map.on('click', onMapClick);
 
     buttonRemoveMarkers.addEventListener('click', removeMarkers);
+
+    // var buttomExportMarkers = document.getElementById("export-markers");
+    buttomExportMarkers.addEventListener('click', saveMarkersToCSV);
+
 
     closeMenu.addEventListener('click', closeMenuPanel);
 
@@ -272,7 +381,27 @@ body {
            texts.removeLayer(layer);
         });
         markerCounter = 0;
+
+        // removes text from content list
+        menuList.innerHTML = '';
     };
+
+    function saveMarkersToCSV() {
+
+        //https://stackoverflow.com/questions/588263/how-can-i-get-all-a-forms-values-that-would-be-submitted-without-submitting
+        
+        var formElement = document.forms.formMarkers;
+        var formData = new FormData(formElement);
+        console.log(formData.get('Desc1'));
+
+        var kvpairs = [];
+        for ( var i = 0; i < formElement.elements.length; i++ ) {
+            var e = formElement.elements[i];
+            kvpairs.push([encodeURIComponent(e.name), encodeURIComponent(e.value)]);
+        }
+        console.log(kvpairs);
+
+    }
 
     function closeMenuPanel() {
         menuDiv.style.display = "none";
