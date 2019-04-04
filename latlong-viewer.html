@@ -295,6 +295,7 @@ body {
 
     var geoJSON = {
         "type": "FeatureCollection",
+        "crs":{"type":"name","properties":{"name":"EPSG:4326"}},
         "features": []
     };
 
@@ -333,6 +334,9 @@ body {
         };
         
         jsonForCSV.push({
+            OBJECTID: markerCounter,
+            Y: e.latlng.lat,
+            X: e.latlng.lng,
             Latitude: e.latlng.lat,
             Longitude: e.latlng.lng
         });
@@ -402,6 +406,8 @@ body {
         markerCounter = 0;
         // removes text from content list
         menuList.innerHTML = '';
+        jsonForCSV = [];
+        geoJSON = {};
     };
 
     function saveMarkersToCSV() {
@@ -475,7 +481,7 @@ body {
         var a = document.createElement('a');
         a.setAttribute('hidden', '');
         a.setAttribute('href', url);
-        a.setAttribute('download', 'downloaded.txt');
+        a.setAttribute('download', 'downloaded.geojson');
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
